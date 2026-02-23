@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>資金計画・諸費用計算書</title>
 
-    <!-- PWA化 & リッチアイコン自動生成スクリプト（重複を解消して一つにまとめました） -->
+    <!-- PWA化 & リッチアイコン自動生成スクリプト -->
     <script>
     try {
         (function() {
@@ -103,13 +103,12 @@
         .sheet {
             width: 100%; 
             max-width: 210mm;
-            height: 297mm;
+            min-height: 297mm;
             background: white; 
             margin: 10mm auto; 
             padding: 10mm 15mm;
             position: relative; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -118,7 +117,23 @@
             height: auto !important;
             min-height: 297mm;
             max-width: 1200px;
-            overflow: visible;
+        }
+
+        /* スマホ向けのレスポンシブ対応（A4固定を解除して画面に合わせる） */
+        @media (max-width: 768px) {
+            body { padding-top: 4.5rem; background-color: #f3f4f6; }
+            .sheet {
+                margin: 0 0 1rem 0;
+                padding: 4vw;
+                max-width: 100%;
+                min-height: auto;
+                height: auto;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            #sheet-bank-select {
+                min-height: auto;
+            }
         }
 
         @media print {
@@ -318,9 +333,9 @@
 
             <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm mb-3">
                 <div class="flex justify-between items-center mb-2 pb-2 border-b-2 border-gray-300">
-                    <label class="font-bold text-base text-primary">物件価格</label>
-                    <div class="flex items-center">
-                        <input type="text" id="propertyPrice" data-global-id="propertyPrice" class="text-2xl font-bold text-right w-48 bg-white border border-gray-300 rounded px-2 py-0.5 focus:border-accent outline-none text-primary ime-normal" value="30,000,000" placeholder="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); handleSheetInputChange(this)" onblur="formatCurrency(this)">
+                    <label class="font-bold text-base text-primary whitespace-nowrap">物件価格</label>
+                    <div class="flex items-center ml-2">
+                        <input type="text" id="propertyPrice" data-global-id="propertyPrice" class="text-2xl font-bold text-right w-32 sm:w-48 bg-white border border-gray-300 rounded px-2 py-0.5 focus:border-accent outline-none text-primary ime-normal" value="30,000,000" placeholder="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); handleSheetInputChange(this)" onblur="formatCurrency(this)">
                         <span class="ml-2 font-bold text-base">円</span>
                     </div>
                 </div>
@@ -347,22 +362,22 @@
                 </div>
 
                 <div class="flex justify-between items-center mb-1 px-2">
-                    <label class="font-bold text-sm text-gray-600">自己資金（頭金）</label>
-                    <div class="flex items-center">
-                        <span class="text-gray-400 mr-2 text-lg font-bold">-</span>
-                        <input type="text" id="downPayment" data-global-id="downPayment" class="text-lg font-bold text-right w-36 bg-white border border-gray-300 rounded px-2 py-1 text-red-600 focus:border-accent outline-none ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); handleSheetInputChange(this)" onblur="formatCurrency(this)">
-                        <span class="ml-2 font-bold text-sm">円</span>
+                    <label class="font-bold text-sm text-gray-600 whitespace-nowrap">自己資金（頭金）</label>
+                    <div class="flex items-center ml-2">
+                        <span class="text-gray-400 mr-1 sm:mr-2 text-lg font-bold">-</span>
+                        <input type="text" id="downPayment" data-global-id="downPayment" class="text-lg font-bold text-right w-24 sm:w-36 bg-white border border-gray-300 rounded px-2 py-1 text-red-600 focus:border-accent outline-none ime-normal" value="0" onfocus="removeFormat(this)" oninput="toHalfWidth(this); handleSheetInputChange(this)" onblur="formatCurrency(this)">
+                        <span class="ml-1 sm:ml-2 font-bold text-sm">円</span>
                     </div>
                 </div>
                 
                 <div class="border-t border-dashed border-gray-400 my-2"></div>
                 
                 <div class="flex justify-between items-center mb-0 px-2">
-                    <label class="font-bold text-xs text-gray-600">融資事務手数料・保証料 <span class="text-[9px] bg-gray-200 px-1 rounded ml-1">別途</span></label>
-                    <div class="flex items-center">
-                        <span class="text-gray-400 mr-2 text-xs font-bold">+</span>
-                        <input type="text" id="separateFeeInput" class="text-base font-bold text-right w-36 bg-gray-100 border border-transparent rounded px-2 py-0.5 text-gray-600" value="0" readonly>
-                        <span class="ml-2 font-bold text-xs">円</span>
+                    <label class="font-bold text-xs text-gray-600 whitespace-nowrap">融資事務手数料・保証料 <span class="text-[9px] bg-gray-200 px-1 rounded ml-1">別途</span></label>
+                    <div class="flex items-center ml-2">
+                        <span class="text-gray-400 mr-1 sm:mr-2 text-xs font-bold">+</span>
+                        <input type="text" id="separateFeeInput" class="text-base font-bold text-right w-24 sm:w-36 bg-gray-100 border border-transparent rounded px-2 py-0.5 text-gray-600" value="0" readonly>
+                        <span class="ml-1 sm:ml-2 font-bold text-xs">円</span>
                     </div>
                 </div>
                 <p class="text-[9px] text-red-500 text-right pr-2">※お借入額には含まれません（別途現金が必要です）</p>
@@ -487,28 +502,28 @@
                         <i class="fas fa-balance-scale-left mr-3 text-2xl"></i> 物件価格変更時の返済額目安 (参考)
                     </h4>
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center bg-white px-5 py-4 rounded-xl border-2 border-yellow-200 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white px-3 sm:px-5 py-3 sm:py-4 rounded-xl border-2 border-yellow-200 shadow-sm gap-2 sm:gap-0">
                             <div class="flex flex-col">
-                                <span class="text-sm font-bold text-gray-600 mb-1">物件価格 <span class="text-primary text-lg bg-yellow-100 px-2 rounded">+100万円</span> の場合</span>
+                                <span class="text-sm font-bold text-gray-600 mb-1">物件価格 <span class="text-primary text-base sm:text-lg bg-yellow-100 px-2 rounded">+100万円</span> の場合</span>
                                 <span class="text-xs text-gray-400">借入: <span id="comp_loan_100" class="font-bold">0</span>円</span>
                             </div>
-                            <div class="text-right">
-                                <div class="flex items-baseline justify-end gap-2">
-                                    <span class="text-2xl font-black text-primary"><span id="comp_monthly_100">0</span></span>
-                                    <span class="text-sm font-bold text-gray-600">円</span>
+                            <div class="text-right self-end sm:self-auto">
+                                <div class="flex items-baseline justify-end gap-1 sm:gap-2">
+                                    <span class="text-xl sm:text-2xl font-black text-primary"><span id="comp_monthly_100">0</span></span>
+                                    <span class="text-xs sm:text-sm font-bold text-gray-600">円</span>
                                 </div>
                                 <span class="text-xs font-bold text-alert bg-red-50 px-2 py-0.5 rounded-full inline-block mt-1">(+<span id="comp_diff_100">0</span> 円)</span>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center bg-white px-5 py-4 rounded-xl border-2 border-yellow-200 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white px-3 sm:px-5 py-3 sm:py-4 rounded-xl border-2 border-yellow-200 shadow-sm gap-2 sm:gap-0">
                             <div class="flex flex-col">
-                                <span class="text-sm font-bold text-gray-600 mb-1">物件価格 <span class="text-primary text-lg bg-yellow-100 px-2 rounded">+200万円</span> の場合</span>
+                                <span class="text-sm font-bold text-gray-600 mb-1">物件価格 <span class="text-primary text-base sm:text-lg bg-yellow-100 px-2 rounded">+200万円</span> の場合</span>
                                 <span class="text-xs text-gray-400">借入: <span id="comp_loan_200" class="font-bold">0</span>円</span>
                             </div>
-                            <div class="text-right">
-                                <div class="flex items-baseline justify-end gap-2">
-                                    <span class="text-2xl font-black text-primary"><span id="comp_monthly_200">0</span></span>
-                                    <span class="text-sm font-bold text-gray-600">円</span>
+                            <div class="text-right self-end sm:self-auto">
+                                <div class="flex items-baseline justify-end gap-1 sm:gap-2">
+                                    <span class="text-xl sm:text-2xl font-black text-primary"><span id="comp_monthly_200">0</span></span>
+                                    <span class="text-xs sm:text-sm font-bold text-gray-600">円</span>
                                 </div>
                                 <span class="text-xs font-bold text-alert bg-red-50 px-2 py-0.5 rounded-full inline-block mt-1">(+<span id="comp_diff_200">0</span> 円)</span>
                             </div>
@@ -802,7 +817,7 @@
             
             const amountInput = document.createElement('input');
             amountInput.type = "text"; 
-            amountInput.className = "w-32 text-right font-bold focus:border-accent outline-none py-1 text-base input-currency bg-transparent border-b border-gray-300 ime-normal"; 
+            amountInput.className = "w-24 sm:w-32 text-right font-bold focus:border-accent outline-none py-1 text-base input-currency bg-transparent border-b border-gray-300 ime-normal"; 
             amountInput.value = amount.toLocaleString();
             amountInput.setAttribute('data-global-id', generateId());
             amountInput.onfocus = function() { removeFormat(this); };
