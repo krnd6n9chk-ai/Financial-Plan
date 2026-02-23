@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>資金計画・諸費用計算書</title>
-    <!-- ↓↓↓ ここからコピーして追加 ↓↓↓ -->
+    
+    <!-- PWA化 & リッチアイコン自動生成スクリプト -->
     <script>
     (function() {
         // ★資金計画アプリ専用のリッチアイコンを自動生成★
@@ -72,11 +73,7 @@
         var link = document.createElement('link'); link.rel = 'manifest'; link.href = URL.createObjectURL(blob); document.head.appendChild(link);
     })();
     </script>
-    <!-- ↑↑↑ ここまで ↑↑↑ -->
-    <!-- iOS PWA/Web Clip対応 -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="資金計画">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -86,7 +83,7 @@
     <!-- SortableJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" crossorigin="anonymous"></script>
     
-    <!-- アプリデータ保存領域 (DL後に復元するためのJSON置き場) -->
+    <!-- アプリデータ保存領域 -->
     <script id="app-data-storage" type="application/json">{}</script>
 
     <script>
@@ -133,7 +130,6 @@
             flex-direction: column;
         }
 
-        /* 金融機関選択シート専用設定（A4サイズ制限を解除し、可変に） */
         #sheet-bank-select {
             height: auto !important;
             min-height: 297mm;
@@ -236,7 +232,7 @@
 </head>
 <body class="antialiased">
 
-    <!-- 操作パネル (Global Header) -->
+    <!-- 操作パネル -->
     <div class="no-print fixed top-0 left-0 w-full bg-gray-900 text-white p-2 z-50 shadow-lg flex justify-between items-center h-16">
         <div class="flex items-center gap-4 pl-2 flex-1 overflow-hidden">
             <h1 class="text-sm md:text-lg font-bold flex items-center whitespace-nowrap flex-shrink-0">
@@ -259,11 +255,15 @@
         </div>
 
         <div class="flex gap-2 pr-2 flex-shrink-0">
+            <!-- インストールボタン追加 -->
+            <button id="install-app-btn" class="hidden bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap animate-pulse" title="アプリをインストール">
+                <i class="fas fa-download md:mr-2"></i> <span class="hidden md:inline">アプリ化</span>
+            </button>
             <button onclick="openRateModal()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap" title="金利設定">
                 <i class="fas fa-cog md:mr-2"></i> <span class="hidden md:inline">設定</span>
             </button>
             <button onclick="downloadHTML()" class="bg-teal-600 hover:bg-teal-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap" title="保存">
-                <i class="fas fa-download md:mr-2"></i> <span class="hidden md:inline">保存</span>
+                <i class="fas fa-save md:mr-2"></i> <span class="hidden md:inline">保存</span>
             </button>
             <button onclick="window.print()" class="bg-green-600 hover:bg-green-500 px-3 py-1.5 rounded text-xs md:text-sm font-bold transition flex items-center whitespace-nowrap" title="印刷">
                 <i class="fas fa-print md:mr-2"></i> <span class="hidden md:inline">印刷</span>
@@ -310,7 +310,6 @@
             <h2 class="text-3xl font-bold text-primary mt-3">金融機関を選択してください</h2>
             <p class="text-gray-500 mt-2 text-sm">各金融機関の金利・プランをクリックして選択します</p>
         </div>
-        <!-- レスポンシブなグリッドレイアウトに変更し、可変サイズに対応 -->
         <div id="bankCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 pb-8">
             <!-- JSで動的生成 -->
         </div>
@@ -541,6 +540,25 @@
     </div>
 
     <script>
+        // --- PWAインストール機能追加 ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-app-btn');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.onclick = async () => {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                };
+            }
+        });
+
         // --- トースト通知 ---
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
@@ -960,7 +978,6 @@
                 const loanAmount = Math.max(0, grandTotal - downPayment);
                 
                 document.getElementById('loanAmountDisplay').innerText = loanAmount.toLocaleString();
-                document.getElementById('sim_amount_hidden').value = loanAmount;
                 
                 calculateLoan(true);
                 
@@ -992,17 +1009,17 @@
                 
                 let plansHtml = "";
                 bank.plans.slice(0, 3).forEach((plan, idx) => {
-                    plansHtml += "<div class=\"plan-info\"><span class=\"text-xs font-bold text-gray-600 truncate mr-2\">" + plan.name + "</span><span class=\"text-lg font-bold text-primary flex-shrink-0\"><span data-rate-bank=\"" + bank.id + "\" data-rate-plan=\"" + idx + "\">" + plan.rate.toFixed(3) + "</span>%</span></div>";
+                    plansHtml += "<div class="plan-info"><span class="text-xs font-bold text-gray-600 truncate mr-2">" + plan.name + "</span><span class="text-lg font-bold text-primary flex-shrink-0"><span data-rate-bank="" + bank.id + "" data-rate-plan="" + idx + "">" + plan.rate.toFixed(3) + "</span>%</span></div>";
                 });
                 
                 let featuresHtml = "";
                 if(bank.features) {
                     bank.features.forEach(f => {
-                        featuresHtml += "<span class=\"feature-badge bg-" + f.color + "-100 text-" + f.color + "-700 mr-1\">" + f.text + "</span>";
+                        featuresHtml += "<span class="feature-badge bg-" + f.color + "-100 text-" + f.color + "-700 mr-1">" + f.text + "</span>";
                     });
                 }
                 
-                card.innerHTML = "<div class=\"flex justify-between items-start mb-3\"><div><h3 class=\"text-xl font-black text-primary\">" + bank.name + "</h3><span class=\"text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-bold\">" + (bank.type || "カスタム") + "</span></div><i class=\"fas " + (bank.icon || "fa-building") + " text-gray-200 text-3xl\"></i></div><div class=\"space-y-2 flex-1\">" + plansHtml + "</div><div class=\"mt-3 pt-2 border-t border-gray-100\">" + featuresHtml + "</div>";
+                card.innerHTML = "<div class="flex justify-between items-start mb-3"><div><h3 class="text-xl font-black text-primary">" + bank.name + "</h3><span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-bold">" + (bank.type || "カスタム") + "</span></div><i class="fas " + (bank.icon || "fa-building") + " text-gray-200 text-3xl"></i></div><div class="space-y-2 flex-1">" + plansHtml + "</div><div class="mt-3 pt-2 border-t border-gray-100">" + featuresHtml + "</div>";
                 
                 container.appendChild(card);
             });
@@ -1179,7 +1196,7 @@
 
             const addBtn = document.createElement("button");
             addBtn.className = "w-full mb-4 py-3 border-2 border-dashed border-accent text-accent rounded-lg hover:bg-blue-50 transition font-bold flex items-center justify-center gap-2";
-            addBtn.innerHTML = "<i class=\"fas fa-plus\"></i> 新規金融機関を追加";
+            addBtn.innerHTML = "<i class="fas fa-plus"></i> 新規金融機関を追加";
             addBtn.onclick = function() { addNewBank(); };
             content.appendChild(addBtn);
 
@@ -1199,7 +1216,7 @@
 
                 const toggleDiv = document.createElement("div");
                 toggleDiv.className = "cursor-pointer flex-1 text-right py-1 pl-4";
-                toggleDiv.innerHTML = "<i class=\"fas fa-chevron-down text-gray-400 transition-transform duration-200\"></i>";
+                toggleDiv.innerHTML = "<i class="fas fa-chevron-down text-gray-400 transition-transform duration-200"></i>";
 
                 header.appendChild(bankNameInput);
                 header.appendChild(toggleDiv);
@@ -1209,7 +1226,7 @@
 
                 const addPlanBtn = document.createElement("button");
                 addPlanBtn.className = "mb-3 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded transition";
-                addPlanBtn.innerHTML = "<i class=\"fas fa-plus\"></i> プラン追加";
+                addPlanBtn.innerHTML = "<i class="fas fa-plus"></i> プラン追加";
                 addPlanBtn.onclick = function() {
                     bank.plans.push({ name: "新規プラン", rate: 1.000, feeType: "rate", feeValue: 0.022, guaranteeType: "none" });
                     openRateModal();
@@ -1225,7 +1242,7 @@
                     
                     const delPlanBtn = document.createElement("button");
                     delPlanBtn.className = "absolute top-2 right-2 text-gray-400 hover:text-red-500";
-                    delPlanBtn.innerHTML = "<i class=\"fas fa-times\"></i>";
+                    delPlanBtn.innerHTML = "<i class="fas fa-times"></i>";
                     delPlanBtn.onclick = function() {
                         if(confirm("このプランを削除しますか？")) {
                             bank.plans.splice(idx, 1);
@@ -1236,12 +1253,12 @@
 
                     const nameDiv = document.createElement("div");
                     nameDiv.className = "w-full md:w-1/4 mb-2 md:mb-0";
-                    nameDiv.innerHTML = "<span class=\"text-[10px] text-gray-500 block mb-1\">プラン名</span><input type=\"text\" id=\"input-planname-" + bank.id + "-" + idx + "\" class=\"w-full border-b border-gray-300 focus:border-accent outline-none font-bold text-sm text-gray-700 bg-transparent\" value=\"" + plan.name + "\">";
+                    nameDiv.innerHTML = "<span class="text-[10px] text-gray-500 block mb-1">プラン名</span><input type="text" id="input-planname-" + bank.id + "-" + idx + "" class="w-full border-b border-gray-300 focus:border-accent outline-none font-bold text-sm text-gray-700 bg-transparent" value="" + plan.name + "">";
                     wrapper.appendChild(nameDiv);
 
                     const rateDiv = document.createElement("div");
                     rateDiv.className = "w-[48%] md:w-1/5";
-                    rateDiv.innerHTML = "<span class=\"text-[10px] text-gray-500 block mb-1\">金利 (%)</span><input type=\"number\" step=\"0.001\" id=\"input-rate-" + bank.id + "-" + idx + "\" class=\"w-full border border-gray-300 rounded p-1 text-right font-bold text-primary\" value=\"" + plan.rate.toFixed(3) + "\">";
+                    rateDiv.innerHTML = "<span class="text-[10px] text-gray-500 block mb-1">金利 (%)</span><input type="number" step="0.001" id="input-rate-" + bank.id + "-" + idx + "" class="w-full border border-gray-300 rounded p-1 text-right font-bold text-primary" value="" + plan.rate.toFixed(3) + "">";
                     wrapper.appendChild(rateDiv);
 
                     const typeDiv = document.createElement("div");
@@ -1254,7 +1271,7 @@
                     const optRate = document.createElement("option"); optRate.value = "rate"; optRate.textContent = "定率 (%)";
                     if(plan.feeType === "rate") optRate.selected = true;
                     typeSelect.appendChild(optFixed); typeSelect.appendChild(optRate);
-                    typeDiv.innerHTML = "<span class=\"text-[10px] text-gray-500 block mb-1\">手数料タイプ</span>";
+                    typeDiv.innerHTML = "<span class="text-[10px] text-gray-500 block mb-1">手数料タイプ</span>";
                     typeDiv.appendChild(typeSelect);
                     wrapper.appendChild(typeDiv);
 
@@ -1262,7 +1279,7 @@
                     valDiv.className = "w-full md:w-1/4 mt-2 md:mt-0";
                     let displayVal = plan.feeType === "rate" ? (plan.feeValue * 100).toFixed(2) : plan.feeValue;
                     let stepVal = plan.feeType === "rate" ? "0.01" : "1000";
-                    valDiv.innerHTML = "<span class=\"text-[10px] text-gray-500 block mb-1\">手数料 (円 or %)</span><input type=\"number\" step=\"" + stepVal + "\" id=\"input-feeValue-" + bank.id + "-" + idx + "\" class=\"w-full border border-gray-300 rounded p-1 text-right\" value=\"" + displayVal + "\">";
+                    valDiv.innerHTML = "<span class="text-[10px] text-gray-500 block mb-1">手数料 (円 or %)</span><input type="number" step="" + stepVal + "" id="input-feeValue-" + bank.id + "-" + idx + "" class="w-full border border-gray-300 rounded p-1 text-right" value="" + displayVal + "">";
                     wrapper.appendChild(valDiv);
 
                     grid.appendChild(wrapper);
@@ -1271,7 +1288,7 @@
 
                 const delBankDiv = document.createElement("div");
                 delBankDiv.className = "mt-4 pt-3 border-t border-gray-100 text-right";
-                delBankDiv.innerHTML = "<button class=\"text-xs text-red-500 hover:text-red-700\"><i class=\"fas fa-trash-alt mr-1\"></i>この金融機関を削除</button>";
+                delBankDiv.innerHTML = "<button class="text-xs text-red-500 hover:text-red-700"><i class="fas fa-trash-alt mr-1"></i>この金融機関を削除</button>";
                 delBankDiv.onclick = function() {
                     if(confirm(bank.name + " を削除しますか？")) {
                         delete bankData[bank.id];
@@ -1337,6 +1354,10 @@
             showToast("金利・手数料情報を保存しました。");
         }
 
+        function syncCustomerName(val) {
+            document.getElementById('headerCustomerNameDisplay').innerText = val || "　　様";
+        }
+
         function downloadHTML() {
             saveAppDataToDOM();
 
@@ -1358,7 +1379,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'financial_plan.html';
+            a.download = 'Financial-Plan.html';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
